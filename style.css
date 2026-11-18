@@ -1,0 +1,22 @@
+/* Custom styles for SECE Centralized Procurement Hub */
+body { font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; }
+.stamp { border: 2px solid #059669; color: #059669; transform: rotate(-4deg); }
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: #f1f5f9; }
+::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 9999px; }
+@keyframes slideIn { from { transform: translateX(110%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+.toast-enter { animation: slideIn .3s cubic-bezier(.16,1,.3,1) forwards; }
+[data-lucide] { display: inline-block; }
+/* Printing: when the sign-off form is open, print only that form */
+@media print {
+    @page { size: A4; margin: 10mm; }
+    * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    body:has(#signoff-modal.flex) { background: #fff !important; display: block !important; min-height: 0 !important; }
+    body:has(#signoff-modal.flex) > *:not(#signoff-modal) { display: none !important; }
+    #signoff-modal.flex { display: block !important; position: static !important; background: none !important; padding: 0 !important; }
+    #signoff-modal > div { max-height: none !important; box-shadow: none !important; border-radius: 0 !important; max-width: none !important; }
+    #signoff-print, #signoff-body { overflow: visible !important; }
+    #signoff-body { padding: 0 !important; }
+    #signoff-body > * + * { margin-top: 14px !important; }
+    .no-print { display: none !important; }
+}

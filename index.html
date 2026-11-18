@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SECE Centralized Procurement Hub</title>
+    <link rel="icon" type="image/png" href="assets/favicon.png">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/tailwind.css">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="bg-gray-50 text-gray-800 min-h-screen flex flex-col">
+    <noscript><div style="background:#fff3cd;color:#664d03;padding:14px;font:14px sans-serif;text-align:center;border-bottom:2px solid #ffc107">This app needs JavaScript. Download the file and open it in Chrome, Edge or Firefox instead of an in-app preview.</div></noscript>
+
+    <!-- ================= LOGIN ================= -->
+    <div id="login-screen" class="hidden fixed inset-0 z-[100] bg-gradient-to-br from-[#002244] via-[#003366] to-[#1A4D8C] items-center justify-center p-4 overflow-y-auto">
+        <div class="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden border-t-8 border-[#FFC107] my-auto">
+            <div class="px-8 pt-7 pb-3 text-center">
+                <img src="assets/logo-full.jpg" alt="Sri Eshwar College of Engineering" class="h-32 mx-auto">
+                <p class="mt-3 text-xs font-bold tracking-wider text-[#003366] uppercase">Centralized Procurement Hub</p>
+                <p class="text-[11px] text-gray-500">Sign in with your institutional account</p>
+            </div>
+            <form onsubmit="doLogin(event)" class="px-8 pb-6 space-y-3 text-xs">
+                <label class="block">
+                    <span class="font-bold text-gray-700 flex items-center gap-1"><i data-lucide="users" class="w-3.5 h-3.5 text-[#003366]"></i> Quick select demo account</span>
+                    <select id="login-account" onchange="pickAccount(this.value)" class="mt-1 w-full p-2.5 rounded-xl border border-gray-300 bg-gray-50 font-medium focus:outline-none focus:ring-2 focus:ring-[#003366]"></select>
+                </label>
+                <label class="block">
+                    <span class="font-bold text-gray-700 flex items-center gap-1"><i data-lucide="mail" class="w-3.5 h-3.5 text-[#003366]"></i> Institutional email</span>
+                    <input id="login-email" type="email" required autocomplete="username" placeholder="name@sece.ac.in" class="mt-1 w-full p-2.5 rounded-xl border border-gray-300 font-mono focus:outline-none focus:ring-2 focus:ring-[#003366]">
+                </label>
+                <label class="block">
+                    <span class="font-bold text-gray-700 flex items-center gap-1"><i data-lucide="key-round" class="w-3.5 h-3.5 text-[#003366]"></i> Password</span>
+                    <input id="login-pass" type="password" required autocomplete="current-password" class="mt-1 w-full p-2.5 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#003366]">
+                </label>
+                <p id="login-error" class="hidden text-red-700 font-semibold bg-red-50 border border-red-200 rounded-lg p-2"></p>
+                <div id="login-role" class="text-center"></div>
+                <button class="w-full py-3 bg-[#003366] hover:bg-[#002244] text-white font-bold text-sm rounded-xl shadow-lg transition flex items-center justify-center gap-2">
+                    <i data-lucide="log-in" class="w-4 h-4"></i> Sign In
+                </button>
+            </form>
+            <div class="px-8 py-3 bg-gray-50 border-t border-gray-100 text-[10px] text-gray-500 text-center leading-relaxed">
+                Demo password for every account: <span class="font-mono font-bold text-[#003366]">sece@123</span><br>
+                Demo sign-in only — accounts are stored in this page, so this is not real security.
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= HEADER ================= -->
+    <header class="sticky top-0 z-30 bg-[#003366] text-white shadow-md border-b-4 border-[#FFC107]">
+        <div class="max-w-7xl mx-auto px-4 py-3 flex flex-wrap gap-3 justify-between items-center">
+            <div class="flex items-center space-x-3">
+                <div class="w-12 h-14 bg-white rounded-lg flex items-center justify-center p-1 shadow">
+                    <img src="assets/logo-emblem.png" alt="Sri Eshwar College of Engineering logo" class="h-full w-auto object-contain">
+                </div>
+                <div>
+                    <h1 class="text-xl font-bold tracking-wide">SRI ESHWAR COLLEGE OF ENGINEERING</h1>
+                    <p class="text-xs text-[#FFC107] font-semibold tracking-wider">AUTONOMOUS INSTITUTION | CENTRALIZED PROCUREMENT HUB</p>
+                </div>
+            </div>
+
+            <div class="flex flex-wrap items-center gap-3">
+                <div class="text-right">
+                    <span id="current-role-badge" class="inline-block bg-[#FFC107] text-[#003366] text-xs px-2.5 py-1 rounded-full font-bold uppercase">Department: ECE</span>
+                    <p id="current-user-name" class="text-xs text-gray-200 mt-0.5">Dr. R. Kumar (HOD)</p>
+                </div>
+
+                <select id="user-switcher" onchange="switchUser(this.value)" title="Switch demo account" class="bg-[#1A4D8C] text-white text-sm border border-blue-400 rounded-lg px-3 py-1.5 max-w-60 focus:outline-none focus:ring-2 focus:ring-[#FFC107]"></select>
+
+                <button onclick="logout()" class="flex items-center gap-1.5 bg-red-600/90 hover:bg-red-700 rounded-lg px-3 py-1.5 text-xs font-bold transition" title="Sign out">
+                    <i data-lucide="log-out" class="w-4 h-4"></i><span class="hidden sm:inline">Logout</span>
+                </button>
+
+                <button onclick="toggleNotifications()" class="relative flex items-center gap-1.5 bg-[#1A4D8C] hover:bg-[#245ea8] border border-blue-400 rounded-lg px-3 py-1.5 text-sm transition" title="Notifications">
+                    <i data-lucide="bell" class="w-4 h-4"></i><span class="hidden sm:inline text-xs font-semibold">Alerts</span>
+                    <span id="notif-badge" class="hidden absolute -top-2 -right-2 min-w-5 h-5 px-1 rounded-full bg-red-600 text-white text-[10px] font-bold flex items-center justify-center">0</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Role context banner -->
+    <div class="bg-[#002244] text-blue-100 border-b border-blue-950">
+        <div class="max-w-7xl mx-auto px-4 py-2 flex flex-wrap gap-2 justify-between items-center text-xs">
+            <div class="flex flex-wrap items-center gap-2">
+                <span id="banner-badge" class="px-2 py-0.5 rounded-md bg-[#FFC107]/20 border border-[#FFC107]/40 text-[#FFC107] font-semibold">HOD View</span>
+                <span id="banner-text" class="text-blue-100"></span>
+            </div>
+            <div class="flex flex-wrap items-center gap-3">
+
+                <button onclick="runDeadlineCheck()" class="flex items-center gap-1 text-blue-200 hover:text-white underline underline-offset-2 decoration-[#FFC107]">
+                    <i data-lucide="alarm-clock" class="w-3.5 h-3.5"></i> Run deadline reminder check
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= MAIN ================= -->
+    <main class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 grid grid-cols-1 lg:grid-cols-4 gap-6">
+
+        <!-- Sidebar -->
+        <aside class="lg:col-span-1 space-y-6">
+            <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-200">
+                <h3 class="text-sm font-bold text-gray-500 uppercase tracking-wider mb-4">Quick Navigation</h3>
+                <nav class="space-y-2">
+                    <button onclick="switchTab('dashboard')" id="nav-dashboard" class="w-full text-left px-4 py-2.5 rounded-lg text-sm flex items-center justify-between">
+                        <span>Requisitions Dashboard</span>
+                        <span id="nav-count" class="bg-[#003366] text-white text-xs px-2 py-0.5 rounded-full" title="Pending your action">0</span>
+                    </button>
+                    <button onclick="switchTab('new-request')" id="nav-new-request" class="w-full text-left px-4 py-2.5 rounded-lg text-sm">
+                        + New Purchase Requisition
+                    </button>
+                    <button onclick="switchTab('analytics')" id="nav-analytics" class="w-full text-left px-4 py-2.5 rounded-lg text-sm">
+                        Budget & Analytics
+                    </button>
+                    <button onclick="switchTab('vendors')" id="nav-vendors" class="w-full text-left px-4 py-2.5 rounded-lg text-sm">
+                        Vendor Directory
+                    </button>
+                    <button onclick="switchTab('signoff-records')" id="nav-signoff-records" class="w-full text-left px-4 py-2.5 rounded-lg text-sm">
+                        Audit & Sanction Records
+                    </button>
+                </nav>
+            </div>
+
+            <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-200">
+                <div class="flex justify-between items-center mb-3">
+                    <h3 class="text-sm font-bold text-gray-500 uppercase tracking-wider">Departments</h3>
+                    <button id="dept-clear" onclick="setDeptFilter('all')" class="hidden text-[11px] text-[#003366] font-semibold hover:underline">Show all</button>
+                </div>
+                <div id="dept-list" class="space-y-1 max-h-[28rem] overflow-y-auto pr-1"></div>
+            </div>
+
+            <div class="bg-gradient-to-br from-[#003366] to-[#1A4D8C] text-white p-5 rounded-xl shadow-sm">
+                <h4 class="font-bold text-sm text-[#FFC107] mb-2">SECE Procurement Policy</h4>
+                <p class="text-xs text-gray-200 leading-relaxed">All departmental purchases above ₹25,000 require multi-tier vendor comparison, HOD approval, Central Purchase clearance, and final Management Sanction sign-off.</p>
+            </div>
+
+            <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-200">
+                <h3 class="text-sm font-bold text-gray-500 uppercase tracking-wider mb-3">Approval Workflow</h3>
+                <ol class="text-xs text-gray-600 space-y-2">
+                    <li><span class="font-bold text-[#003366]">1.</span> Faculty / Lab Tech / Student raises request</li>
+                    <li><span class="font-bold text-[#003366]">2.</span> HOD reviews & endorses</li>
+                    <li><span class="font-bold text-[#003366]">3.</span> Purchase Desk compares vendor quotes</li>
+                    <li><span class="font-bold text-[#003366]">4.</span> Management grants final sanction</li>
+                    <li><span class="font-bold text-[#003366]">5.</span> Purchase issues PO to vendor</li>
+                    <li><span class="font-bold text-[#003366]">6.</span> Department confirms delivery</li>
+                </ol>
+                <button onclick="resetDemo()" class="mt-4 w-full text-[11px] text-gray-400 hover:text-red-600 underline">Reset demo data</button>
+            </div>
+        </aside>
+
+        <!-- Content -->
+        <div class="lg:col-span-3 space-y-6">
+
+            <!-- Dashboard -->
+            <div id="tab-dashboard" class="space-y-6">
+                <section id="kpis" class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4"></section>
+
+                <div id="deadline-strip" class="hidden rounded-xl bg-amber-50 border border-amber-200 p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div class="flex items-start gap-3">
+                        <div class="w-9 h-9 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center shrink-0"><i data-lucide="alert-triangle" class="w-5 h-5"></i></div>
+                        <div>
+                            <h3 class="text-sm font-semibold text-amber-950">Approaching Required-By Dates</h3>
+                            <p id="deadline-text" class="text-xs text-amber-800 mt-0.5"></p>
+                        </div>
+                    </div>
+                    <button onclick="setStatusFilter('urgent')" class="px-3.5 py-2 rounded-lg bg-amber-600 hover:bg-amber-700 text-white text-xs font-semibold shadow-sm whitespace-nowrap">Review urgent items</button>
+                </div>
+
+                <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200 space-y-3">
+                    <div class="flex flex-wrap justify-between items-center gap-3">
+                        <div>
+                            <h2 id="view-title" class="text-lg font-bold text-[#003366]">Department Requisitions</h2>
+                            <p id="view-subtitle" class="text-xs text-gray-500">Track status, quotations, and two-way correspondence in real-time.</p>
+                        </div>
+                        <button onclick="switchTab('new-request')" class="raise-btn bg-[#FFC107] hover:bg-amber-400 text-[#003366] font-bold text-xs px-4 py-2 rounded-lg shadow transition">+ Raise Requisition</button>
+                    </div>
+                    <div class="flex flex-wrap gap-2">
+                        <div class="relative flex-1 min-w-48">
+                            <i data-lucide="search" class="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2"></i>
+                            <input id="search" oninput="renderList()" placeholder="Search ID, item, requester, category..." class="w-full pl-9 pr-3 py-2 text-xs border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#003366]">
+                        </div>
+                        <select id="status-filter" onchange="renderList()" class="text-xs border border-gray-300 rounded-lg px-2 py-2">
+                            <option value="all">All statuses</option>
+                            <option value="mine">⭐ Pending my action</option>
+                            <option value="urgent">🔥 Approaching deadline</option>
+                        </select>
+                        <select id="dept-filter" onchange="setDeptFilter(this.value)" class="text-xs border border-gray-300 rounded-lg px-2 py-2"></select>
+                        <select id="priority-filter" onchange="renderList()" class="text-xs border border-gray-300 rounded-lg px-2 py-2">
+                            <option value="all">All priorities</option>
+                            <option value="Urgent">Urgent</option>
+                            <option value="High">High</option>
+                            <option value="Normal">Normal</option>
+                        </select>
+                        <button onclick="exportRequests()" class="flex items-center gap-1 text-xs font-semibold border border-gray-300 rounded-lg px-3 py-2 hover:bg-gray-50" title="Download the filtered list as a CSV file (opens in Excel)">
+                            <i data-lucide="download" class="w-3.5 h-3.5"></i> Export
+                        </button>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                    <div class="px-6 py-4 border-b border-gray-200 bg-gray-50 flex flex-wrap gap-2 justify-between items-center">
+                        <span class="text-xs font-bold text-gray-600 uppercase">Requisitions <span id="list-count" class="text-gray-400 font-medium normal-case"></span></span>
+                        <div class="flex flex-wrap gap-2">
+                            <span id="count-approved" class="text-xs bg-emerald-100 text-emerald-800 px-2.5 py-1 rounded-full font-medium"></span>
+                            <span id="count-pending" class="text-xs bg-amber-100 text-amber-800 px-2.5 py-1 rounded-full font-medium"></span>
+                            <span id="count-returned" class="text-xs bg-red-100 text-red-800 px-2.5 py-1 rounded-full font-medium"></span>
+                        </div>
+                    </div>
+                    <div id="request-list" class="divide-y divide-gray-200"></div>
+                </div>
+            </div>
+
+            <!-- New requisition -->
+            <div id="tab-new-request" class="hidden bg-white p-6 rounded-xl shadow-sm border border-gray-200 space-y-6">
+                <div>
+                    <h2 class="text-lg font-bold text-[#003366]">New Purchase Requisition Form</h2>
+                    <p id="form-route" class="text-xs text-gray-500">Submit equipment, software, or lab consumable requests.</p>
+                </div>
+
+                <div id="form-blocked" class="hidden bg-amber-50 border border-amber-200 text-amber-800 text-xs p-3 rounded-lg">
+                    Requisitions are raised by departments. Switch to a department in the top-right selector to raise one.
+                </div>
+
+                <form id="req-form" onsubmit="handleFormSubmit(event)" class="space-y-4">
+                    <div id="requester-row" class="hidden grid grid-cols-1 sm:grid-cols-2 gap-4 bg-blue-50/60 border border-blue-100 p-3 rounded-lg">
+                        <div>
+                            <label class="block text-xs font-bold text-gray-700 mb-1">Requester Name</label>
+                            <input id="f-req-name" type="text" class="w-full text-sm border border-gray-300 rounded-lg p-2.5 bg-white focus:ring-2 focus:ring-[#003366]">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-700 mb-1">Requester Role</label>
+                            <select id="f-req-role" class="w-full text-sm border border-gray-300 rounded-lg p-2.5 bg-white">
+                                <option>Faculty / Staff</option>
+                                <option>Lab Technician</option>
+                                <option>Student (Project / Club)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-bold text-gray-700 mb-1">Item / Equipment Name</label>
+                            <input id="f-title" type="text" required placeholder="e.g. Workstation PC for AI Lab" class="w-full text-sm border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-[#003366]">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-700 mb-1">Category</label>
+                            <select id="f-category" class="w-full text-sm border border-gray-300 rounded-lg p-2.5"></select>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <div>
+                            <label class="block text-xs font-bold text-gray-700 mb-1">Quantity Required</label>
+                            <input id="f-qty" type="number" min="1" required placeholder="5" oninput="updateEstimate()" class="w-full text-sm border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-[#003366]">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-700 mb-1">Estimated Unit Cost (₹)</label>
+                            <input id="f-cost" type="number" min="1" required placeholder="45000" oninput="updateEstimate()" class="w-full text-sm border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-[#003366]">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-700 mb-1">Required-By Date</label>
+                            <input id="f-date" type="date" required class="w-full text-sm border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-[#003366]">
+                        </div>
+                    </div>
+
+                    <div id="estimate-box" class="hidden text-xs p-3 rounded-lg border"></div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-bold text-gray-700 mb-1">Priority Level</label>
+                            <select id="f-priority" onchange="toggleUrgentField()" class="w-full text-sm border border-gray-300 rounded-lg p-2.5">
+                                <option>Normal</option>
+                                <option>High</option>
+                                <option value="Urgent">Urgent / Emergency Procurement</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-700 mb-1">Vendor Quotation Attachment</label>
+                            <input id="f-file" type="file" multiple class="w-full text-xs text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-[#003366] hover:file:bg-blue-100">
+                        </div>
+                    </div>
+
+                    <div id="urgent-justification-box" class="hidden">
+                        <label class="block text-xs font-bold text-red-700 mb-1">Urgency Justification Note (Mandatory)</label>
+                        <textarea id="f-urgent" rows="2" placeholder="Explain why this cannot wait for regular purchase cycles..." class="w-full text-sm border border-red-300 rounded-lg p-2.5 focus:ring-2 focus:ring-red-500"></textarea>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700 mb-1">Detailed Specification & Purpose</label>
+                        <textarea id="f-spec" rows="3" required placeholder="Mention model numbers, processor specs, lab room number..." class="w-full text-sm border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-[#003366]"></textarea>
+                    </div>
+
+                    <div class="flex justify-end space-x-3 pt-2">
+                        <button type="button" onclick="switchTab('dashboard')" class="px-4 py-2 bg-gray-200 text-gray-700 text-xs font-semibold rounded-lg">Cancel</button>
+                        <button type="submit" id="submit-btn" class="px-5 py-2 bg-[#003366] hover:bg-blue-900 text-white text-xs font-bold rounded-lg shadow">Submit Requisition</button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Budget & Analytics -->
+            <div id="tab-analytics" class="hidden space-y-6">
+                <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200 flex flex-wrap justify-between items-center gap-3">
+                    <div>
+                        <h2 class="text-lg font-bold text-[#003366]">Budget & Procurement Analytics <span class="text-sm font-semibold text-gray-400" id="fy-label"></span></h2>
+                        <p id="analytics-sub" class="text-xs text-gray-500">Department budgets against committed and in-pipeline spend.</p>
+                    </div>
+                    <button onclick="exportBudgets()" class="flex items-center gap-1 text-xs font-semibold border border-gray-300 rounded-lg px-3 py-2 hover:bg-gray-50"><i data-lucide="download" class="w-3.5 h-3.5"></i> Export budget report</button>
+                </div>
+                <section id="an-kpis" class="grid grid-cols-2 xl:grid-cols-5 gap-4"></section>
+                <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-200">
+                    <div class="flex flex-wrap justify-between items-end gap-2 mb-4">
+                        <div>
+                            <h3 class="text-sm font-bold text-gray-800">Budget utilisation by department</h3>
+                            <p class="text-[11px] text-gray-500">Bar length is share of the yearly budget. Hover a bar for exact amounts.</p>
+                        </div>
+                        <div class="flex items-center gap-4 text-[11px] text-gray-600">
+                            <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-sm bg-[#2F6FB5]"></span>Committed (sanctioned onwards)</span>
+                            <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-sm bg-[#B07A00]"></span>In approval pipeline</span>
+                            <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-sm bg-gray-200"></span>Available</span>
+                        </div>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-xs">
+                            <thead class="text-gray-500 text-left border-b border-gray-200">
+                                <tr><th class="py-2 pr-2">Dept</th><th class="pr-2">Budget</th><th class="w-2/5 pr-3">Utilisation</th><th class="text-right pr-2">Committed</th><th class="text-right pr-2">Pipeline</th><th class="text-right pr-2">Available</th><th class="text-right">Used</th></tr>
+                            </thead>
+                            <tbody id="budget-rows"></tbody>
+                        </table>
+                    </div>
+                    <p id="budget-edit-note" class="hidden text-[11px] text-gray-500 mt-3">Management can edit a department's budget directly in the Budget column.</p>
+                </div>
+                <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
+                    <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-200">
+                        <h3 class="text-sm font-bold text-gray-800">Committed spend by category</h3>
+                        <p class="text-[11px] text-gray-500 mb-4">Sanctioned, ordered and delivered requisitions.</p>
+                        <div id="chart-category" class="space-y-2.5"></div>
+                    </div>
+                    <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-200">
+                        <h3 class="text-sm font-bold text-gray-800">Requisitions by stage</h3>
+                        <p class="text-[11px] text-gray-500 mb-4">Where open and closed requests currently sit.</p>
+                        <div id="chart-stage" class="space-y-2.5"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Vendor directory -->
+            <div id="tab-vendors" class="hidden space-y-6">
+                <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200 flex flex-wrap justify-between items-center gap-3">
+                    <div>
+                        <h2 class="text-lg font-bold text-[#003366]">Vendor Directory</h2>
+                        <p class="text-xs text-gray-500">Approved suppliers with performance from past orders. Ratings are given by departments when they confirm delivery.</p>
+                    </div>
+                    <div class="flex gap-2">
+                        <input id="vendor-search" oninput="renderVendors()" placeholder="Search vendor, city, category..." class="text-xs border border-gray-300 rounded-lg px-3 py-2 w-56">
+                        <button onclick="exportVendors()" class="flex items-center gap-1 text-xs font-semibold border border-gray-300 rounded-lg px-3 py-2 hover:bg-gray-50"><i data-lucide="download" class="w-3.5 h-3.5"></i> Export</button>
+                    </div>
+                </div>
+                <form id="vendor-form" onsubmit="addVendor(event)" class="hidden bg-white p-4 rounded-xl shadow-sm border border-gray-200 grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
+                    <p class="col-span-2 md:col-span-4 font-bold text-[#003366] text-sm">Register a new vendor</p>
+                    <input id="v-name" required placeholder="Vendor name *" class="border border-gray-300 rounded-lg px-2.5 py-2 col-span-2">
+                    <input id="v-gstin" placeholder="GSTIN (15 characters)" maxlength="15" class="border border-gray-300 rounded-lg px-2.5 py-2 uppercase">
+                    <input id="v-city" placeholder="City" class="border border-gray-300 rounded-lg px-2.5 py-2">
+                    <input id="v-contact" placeholder="Contact person" class="border border-gray-300 rounded-lg px-2.5 py-2">
+                    <input id="v-phone" placeholder="Phone" class="border border-gray-300 rounded-lg px-2.5 py-2">
+                    <input id="v-email" type="email" placeholder="Email" class="border border-gray-300 rounded-lg px-2.5 py-2">
+                    <input id="v-cats" placeholder="Categories (comma separated)" class="border border-gray-300 rounded-lg px-2.5 py-2">
+                    <button class="col-span-2 md:col-span-4 bg-[#003366] hover:bg-blue-900 text-white font-bold rounded-lg py-2">+ Add to Directory</button>
+                </form>
+                <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-x-auto">
+                    <table class="w-full text-xs">
+                        <thead class="bg-gray-50 text-gray-500 text-left border-b border-gray-200">
+                            <tr><th class="py-3 px-4">Vendor</th><th>Categories</th><th>Contact</th><th class="text-right">Quotes</th><th class="text-right">POs won</th><th class="text-right">Business value</th><th class="px-3">Rating</th><th class="text-right pr-4">On-time</th></tr>
+                        </thead>
+                        <tbody id="vendor-rows" class="divide-y divide-gray-100"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Records -->
+            <div id="tab-signoff-records" class="hidden bg-white p-6 rounded-xl shadow-sm border border-gray-200 space-y-6">
+                <div class="flex flex-wrap justify-between items-center gap-3">
+                    <div>
+                        <h2 class="text-lg font-bold text-[#003366]">Management Sanction & Audit Records</h2>
+                        <p class="text-xs text-gray-500">Official digitally signed sign-off records generated for institutional auditing and accounting.</p>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-[10px] uppercase text-gray-500 font-bold">Total sanctioned value</p>
+                        <p id="sanction-total" class="text-lg font-bold text-emerald-700">₹0</p>
+                    </div>
+                </div>
+                <div id="records-list" class="space-y-3"></div>
+                <div id="access-log-wrap" class="hidden pt-4 border-t border-gray-200">
+                    <h3 class="text-sm font-bold text-[#003366] mb-2">Sign-in & Access Log</h3>
+                    <div class="overflow-x-auto"><table class="w-full text-xs">
+                        <thead class="text-gray-500 text-left bg-gray-50"><tr><th class="py-2 px-3">Time</th><th>Action</th><th>User</th><th>Role</th><th>Email</th></tr></thead>
+                        <tbody id="access-log" class="divide-y divide-gray-100"></tbody>
+                    </table></div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Chart tooltip & vendor suggestions -->
+    <div id="tip" class="hidden fixed z-[80] pointer-events-none bg-gray-900 text-white text-[11px] leading-snug rounded-lg px-3 py-2 shadow-lg max-w-xs"></div>
+    <datalist id="vendor-options"></datalist>
+
+    <!-- Toasts -->
+    <div id="toasts" class="fixed bottom-4 right-4 z-[70] flex flex-col gap-2 w-[calc(100%-2rem)] sm:w-96 pointer-events-none"></div>
+
+    <!-- ================= REQUEST DETAIL MODAL ================= -->
+    <div id="detail-modal" class="fixed inset-0 bg-black/50 hidden items-center justify-center p-3 sm:p-6 z-50">
+        <div class="bg-white w-full max-w-6xl rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[94vh]">
+            <div class="bg-[#003366] text-white px-5 py-3.5 flex justify-between items-start gap-3 border-b-4 border-[#FFC107]">
+                <div class="min-w-0">
+                    <div id="d-badges" class="flex flex-wrap items-center gap-2 text-xs"></div>
+                    <h3 id="d-title" class="font-bold text-base sm:text-lg mt-1"></h3>
+                </div>
+                <div class="flex items-center gap-2 shrink-0">
+                    <button id="d-signoff-btn" class="bg-[#FFC107] text-[#003366] hover:bg-amber-400 text-xs font-bold px-3 py-1.5 rounded-lg">Sign-Off Form</button>
+                    <button onclick="closeModal('detail-modal')" class="text-white hover:text-gray-300 font-bold text-2xl leading-none">&times;</button>
+                </div>
+            </div>
+
+            <div class="flex-1 overflow-hidden grid grid-cols-1 lg:grid-cols-12">
+                <!-- Left -->
+                <div class="lg:col-span-7 p-5 space-y-5 overflow-y-auto text-xs">
+                    <div class="bg-gray-50 rounded-xl p-4 border border-gray-200">
+                        <div class="flex justify-between items-center mb-3">
+                            <span class="font-bold uppercase tracking-wider text-gray-500">Approval & Fulfilment Pipeline</span>
+                            <span id="d-status"></span>
+                        </div>
+                        <div id="d-stepper" class="grid grid-cols-6 gap-1.5"></div>
+                    </div>
+
+                    <div id="d-meta" class="grid grid-cols-2 sm:grid-cols-3 gap-3"></div>
+                    <div id="d-justification"></div>
+                    <div id="d-actions"></div>
+
+                    <div class="border border-gray-200 rounded-xl overflow-hidden">
+                        <div class="px-4 py-2.5 bg-gray-50 border-b border-gray-200 flex justify-between items-center">
+                            <span class="font-bold uppercase tracking-wider text-gray-600">Vendor Quotation Comparison</span>
+                            <span id="quote-policy" class="text-[10px] font-semibold"></span>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full">
+                                <thead class="text-gray-500 text-left bg-white">
+                                    <tr><th class="py-2 px-3">Vendor</th><th>Quoted Total</th><th>GST</th><th>Warranty</th><th>Lead Time</th><th class="text-right px-3">Selected</th></tr>
+                                </thead>
+                                <tbody id="quote-rows"></tbody>
+                            </table>
+                        </div>
+                        <form id="quote-form" onsubmit="addQuote(event)" class="hidden p-3 border-t border-gray-100 grid grid-cols-2 sm:grid-cols-6 gap-2">
+                            <input id="q-vendor" required list="vendor-options" placeholder="Vendor (from directory)" class="col-span-2 border border-gray-300 rounded-lg px-2 py-1.5">
+                            <input id="q-amount" required type="number" min="1" placeholder="Total ₹" class="border border-gray-300 rounded-lg px-2 py-1.5">
+                            <select id="q-gst" class="border border-gray-300 rounded-lg px-2 py-1.5"><option value="yes">GST incl.</option><option value="no">GST extra</option></select>
+                            <input id="q-warranty" placeholder="Warranty" class="border border-gray-300 rounded-lg px-2 py-1.5">
+                            <input id="q-days" type="number" min="1" placeholder="Days" class="border border-gray-300 rounded-lg px-2 py-1.5">
+                            <button class="col-span-2 sm:col-span-6 bg-[#FFC107] text-[#003366] font-bold rounded-lg px-2 py-1.5">+ Add Quotation</button>
+                        </form>
+                    </div>
+
+                    <div id="d-po"></div>
+
+                    <div>
+                        <h4 class="font-bold uppercase tracking-wider text-gray-500 mb-2">Workflow Activity Log</h4>
+                        <ol id="d-log" class="space-y-3 pl-3 border-l-2 border-blue-200"></ol>
+                    </div>
+                </div>
+
+                <!-- Right: chat -->
+                <div class="lg:col-span-5 flex flex-col bg-gray-50 border-t lg:border-t-0 lg:border-l border-gray-200 h-[440px] lg:h-auto">
+                    <div class="px-4 py-3 bg-white border-b border-gray-200 flex justify-between items-center">
+                        <div>
+                            <h4 class="text-sm font-bold text-[#003366]">Request Clarification Chat</h4>
+                            <p class="text-[11px] text-gray-500">Shared by Requester, HOD, Purchase Desk & Management</p>
+                        </div>
+                        <span id="chat-count" class="px-2 py-0.5 rounded-full bg-gray-100 text-gray-600 text-xs font-semibold">0</span>
+                    </div>
+                    <div id="chat-body" class="flex-1 p-4 overflow-y-auto space-y-3 text-xs"></div>
+                    <form onsubmit="sendMessage(event)" class="p-3 bg-white border-t border-gray-200">
+                        <p class="text-[11px] text-gray-500 mb-1.5">Posting as: <strong id="chat-as" class="text-[#003366]"></strong></p>
+                        <div class="flex gap-2">
+                            <input id="chat-input" type="text" placeholder="Ask about model numbers, specs, deadlines..." class="flex-1 text-xs border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#003366]">
+                            <button class="bg-[#003366] text-white text-xs px-4 py-2 font-bold rounded-lg flex items-center gap-1">Send <i data-lucide="send" class="w-3.5 h-3.5"></i></button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Return / Reject note modal -->
+    <div id="note-modal" class="fixed inset-0 bg-black/50 hidden items-center justify-center p-4 z-[60]">
+        <form onsubmit="confirmNote(event)" class="bg-white w-full max-w-md rounded-2xl shadow-xl p-5 space-y-3">
+            <h3 id="note-title" class="font-bold text-sm text-[#003366]">Add a note</h3>
+            <textarea id="note-text" required rows="3" class="w-full text-sm border border-gray-300 rounded-lg p-2.5" placeholder="Reason (shared in the discussion thread)"></textarea>
+            <div class="flex justify-end gap-2">
+                <button type="button" onclick="closeModal('note-modal')" class="px-4 py-2 bg-gray-200 text-gray-700 text-xs font-semibold rounded-lg">Cancel</button>
+                <button id="note-confirm" class="px-4 py-2 bg-red-600 text-white text-xs font-bold rounded-lg">Confirm</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Notification drawer -->
+    <div id="notif-drawer" class="hidden fixed inset-0 z-[65]">
+        <div onclick="toggleNotifications()" class="absolute inset-0 bg-black/40"></div>
+        <div class="absolute inset-y-0 right-0 max-w-md w-full bg-white shadow-2xl flex flex-col">
+            <div class="px-5 py-4 bg-[#003366] text-white flex justify-between items-center border-b-4 border-[#FFC107]">
+                <div class="flex items-center gap-2"><i data-lucide="bell-ring" class="w-5 h-5 text-[#FFC107]"></i><h2 class="font-bold">Workflow Notifications</h2></div>
+                <div class="flex items-center gap-2">
+                    <button onclick="markAllRead()" class="text-xs font-semibold text-[#FFC107] hover:underline">Mark all read</button>
+                    <button onclick="toggleNotifications()" class="text-2xl leading-none">&times;</button>
+                </div>
+            </div>
+            <div class="px-5 py-2 bg-blue-50 border-b border-blue-100 text-[11px] text-blue-900 flex justify-between items-center">
+                <span>For: <strong id="notif-for"></strong></span>
+                <label class="flex items-center gap-1.5 cursor-pointer"><input type="checkbox" id="notif-all" onchange="renderNotifications()"> Show system-wide log</label>
+            </div>
+            <div id="notif-list" class="flex-1 overflow-y-auto p-4 space-y-3"></div>
+        </div>
+    </div>
+
+    <!-- ================= SIGN-OFF MODAL ================= -->
+    <div id="signoff-modal" class="fixed inset-0 bg-black/60 hidden items-center justify-center p-4 z-[60]">
+        <div class="bg-white w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+            <div id="signoff-print" class="flex flex-col overflow-hidden">
+                <div class="print:hidden bg-[#003366] text-white px-6 py-4 flex justify-between items-center border-b-4 border-[#FFC107]">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-9 h-11 bg-white rounded-md flex items-center justify-center p-0.5">
+                            <img src="assets/logo-emblem.png" alt="SECE logo" class="h-full w-auto object-contain">
+                        </div>
+                        <div>
+                            <h3 class="font-bold text-sm tracking-wide">SRI ESHWAR COLLEGE OF ENGINEERING</h3>
+                            <p id="print-subtitle" class="text-[10px] text-[#FFC107]">OFFICIAL PROCUREMENT SANCTION & SIGN-OFF RECORD</p>
+                        </div>
+                    </div>
+                    <button onclick="closeModal('signoff-modal')" class="no-print text-white hover:text-gray-300 font-bold text-xl">&times;</button>
+                </div>
+                <div id="signoff-body" class="p-6 overflow-y-auto space-y-6 text-xs text-gray-700"></div>
+            </div>
+            <div class="no-print px-6 py-3 border-t border-gray-200 bg-gray-50 flex flex-wrap justify-end gap-2">
+                <button onclick="closeModal('signoff-modal')" class="px-4 py-2 bg-gray-200 text-gray-700 text-xs font-semibold rounded-lg">Close</button>
+                <button onclick="window.print()" class="px-4 py-2 bg-[#003366] hover:bg-blue-900 text-white text-xs font-bold rounded-lg">🖨 Print / Save as PDF</button>
+            </div>
+        </div>
+    </div>
+
+<script src="js/app.js"></script>
+</body>
+</html>
